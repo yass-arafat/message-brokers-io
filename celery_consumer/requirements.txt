@@ -1,0 +1,3 @@
+celery==4.4.7
+kombu==4.6.10
+flower

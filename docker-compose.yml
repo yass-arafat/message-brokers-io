@@ -1,0 +1,38 @@
+# WARNING: this file is not suitable for production, please use with caution
+version: '3'
+
+services:
+  
+  rabbitmq:
+    image: rabbitmq
+  
+  celery_consumer:
+    build: 
+      context: ./celery_consumer/
+      dockerfile: Dockerfile
+    command: "celery worker -A consumer.celery_app:app -Q custom"
+    volumes:
+      - ./celery_consumer/consumer/:/code/consumer
+    depends_on:
+      - rabbitmq
+  
+  celery_producer:
+    build: 
+      context: ./celery_producer/
+      dockerfile: Dockerfile
+    command: "celery worker -A producer.celery_app:app -Q custom"
+    volumes:
+      - ./celery_producer/producer/:/code/producer
+    depends_on:
+      - rabbitmq
+  
+  monitor:
+    build: 
+      context: ./celery_producer/
+      dockerfile: Dockerfile
+    ports:
+      - "5555:5555"
+    entrypoint: flower
+    command:  -A producer.celery_app:app --port=5555 --broker=amqp://guest:guest@rabbitmq
+    depends_on:
+      - rabbitmq
